@@ -1,0 +1,14 @@
+# TODO: Add license info
+
+[package]
+name = "icu4x-js-regexp"
+version = "0.1.0"
+authors = ["Iain Ireland <iireland@mozilla.com>"]
+edition = "2018"
+
+# TODO: non-local deps
+[dependencies]
+icu_provider = { path = "../icu4x/provider/core" }
+icu_provider_blob = { path = "../icu4x/provider/blob", features = ["export"] }
+icu_provider_uprops = { path = "../icu4x/provider/uprops" }
+icu_uniset = { path = "../icu4x/components/uniset" }
