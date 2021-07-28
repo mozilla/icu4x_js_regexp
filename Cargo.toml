@@ -10,9 +10,8 @@ edition = "2018"
 crate-type = ["staticlib", "rlib", "cdylib"]
 path = "src/lib.rs"
 
-# TODO: non-local deps
 [dependencies]
-icu_provider = { path = "../icu4x/provider/core" , features = ["std"] }
-icu_provider_blob = { path = "../icu4x/provider/blob", features = ["export"] }
-icu_provider_uprops = { path = "../icu4x/provider/uprops" }
-icu_uniset = { path = "../icu4x/components/uniset" }
+icu_provider = { git = "https://github.com/iainireland/icu4x.git", rev = "66910f11e7a6047f7ea78b5c5596d5f9c55a29fc" }
+icu_provider_blob = { git = "https://github.com/iainireland/icu4x.git", rev = "66910f11e7a6047f7ea78b5c5596d5f9c55a29fc", features = ["export"] }
+icu_provider_uprops = { git = "https://github.com/iainireland/icu4x.git", rev = "66910f11e7a6047f7ea78b5c5596d5f9c55a29fc" }
+icu_uniset = { git = "https://github.com/iainireland/icu4x.git", rev = "66910f11e7a6047f7ea78b5c5596d5f9c55a29fc" }
