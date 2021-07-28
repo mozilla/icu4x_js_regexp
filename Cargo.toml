@@ -6,6 +6,10 @@ version = "0.1.0"
 authors = ["Iain Ireland <iireland@mozilla.com>"]
 edition = "2018"
 
+[lib]
+crate-type = ["staticlib", "rlib", "cdylib"]
+path = "src/lib.rs"
+
 # TODO: non-local deps
 [dependencies]
 icu_provider = { path = "../icu4x/provider/core" , features = ["std"] }
