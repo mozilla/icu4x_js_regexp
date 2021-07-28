@@ -7,13 +7,18 @@
 extern "C" {
 #endif
 
-// opaque
+#include <stdint.h>
+
 typedef struct ICU4XUniset ICU4XUniset;
 
-ICU4XUniset* icu4x_get_unicode_set_for_property(const char* prop_name,
-						const char* prop_value);
+ICU4XUniset* icu4x_uniset_create_for_property(const char* prop_name,
+					    const char* prop_value);
 
-void icu4x_free_unicode_set(ICU4XUniset*);
+size_t icu4x_uniset_get_range_count(const ICU4XUniset* set);
+uint32_t icu4x_uniset_get_range_start(const ICU4XUniset* set, size_t index);
+uint32_t icu4x_uniset_get_range_end(const ICU4XUniset* set, size_t index);
+
+void icu4x_uniset_destroy(ICU4XUniset*);
 
 #ifdef __cplusplus
 }
