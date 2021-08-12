@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use icu_provider::export::DataExporter;
 use icu_provider::ResourceKey;
 use icu_provider_blob::export::BlobExporter;
-use icu_provider_uprops::BinaryPropertiesDataProvider;
+use icu_provider_uprops::PropertiesDataProvider;
 
 fn raw_data_dir() -> PathBuf {
     PathBuf::from(std::env!("CARGO_MANIFEST_DIR")).join("data/raw")
@@ -19,7 +19,7 @@ fn get_all_uprops_keys() -> Vec<ResourceKey> {
 
     // Keys are supported if a corresponding .toml file exists in `/data`.
     for key in &icu_uniset::provider::key::ALL_KEYS {
-        let name = key.sub_category;
+        let name = key.sub_category.split("=").collect::<Vec<_>>()[0];
         let mut path = raw_data_dir().clone().join(&*name);
         path.set_extension("toml");
         if path.exists() {
@@ -31,7 +31,7 @@ fn get_all_uprops_keys() -> Vec<ResourceKey> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let fs_provider = BinaryPropertiesDataProvider::new(raw_data_dir());
+    let fs_provider = PropertiesDataProvider::new(raw_data_dir());
 
     let sink = Box::new(std::fs::File::create(output_path())?);
     let mut exporter = BlobExporter::new_with_sink(sink);
