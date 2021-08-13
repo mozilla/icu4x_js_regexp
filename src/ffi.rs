@@ -57,7 +57,7 @@ pub unsafe extern "C" fn icu4x_uniset_get_range_start(
     uniset: *const ICU4XUniset,
     index: usize
 ) -> u32 {
-    (&*uniset).get_range(index).map(|range| *range.start()).unwrap_or(0)
+    (&*uniset).get_nth_range(index).map(|range| *range.start()).unwrap_or(0)
 }
 
 #[no_mangle]
@@ -65,7 +65,7 @@ pub unsafe extern "C" fn icu4x_uniset_get_range_end(
     uniset: *const ICU4XUniset,
     index: usize
 ) -> u32 {
-    (&*uniset).get_range(index).map(|range| *range.end()).unwrap_or(0)
+    (&*uniset).get_nth_range(index).map(|range| *range.end()).unwrap_or(0)
 }
 
 #[no_mangle]
