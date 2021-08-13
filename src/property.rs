@@ -2,7 +2,7 @@
 
 use crate::blob_provider;
 use icu_uniset::props::*;
-use icu_uniset::enum_props::GeneralCategory;
+use icu_uniset::enum_props::{GeneralCategory, Script};
 use icu_uniset::UnicodeSet;
 
 pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<UnicodeSet> {
@@ -17,6 +17,7 @@ pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<Unic
         Property::CaseIgnorable => get_case_ignorable_property(&provider),
         Property::Cased => get_cased_property(&provider),
         Property::ChangesWhenCasefolded => get_changes_when_casefolded_property(&provider),
+        Property::ChangesWhenCasemapped => get_changes_when_casemapped_property(&provider),
         Property::ChangesWhenLowercased => get_changes_when_lowercased_property(&provider),
         Property::ChangesWhenNfkcCasefolded => get_changes_when_nfkc_casefolded_property(&provider),
         Property::ChangesWhenTitlecased => get_changes_when_titlecased_property(&provider),
@@ -63,6 +64,11 @@ pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<Unic
         Property::GeneralCategory => {
             let category = get_general_category(prop_value?)?;
             get_general_category_val_set(&provider, category)
+        },
+
+        Property::Script => {
+            let script = get_script(prop_value?)?;
+            get_script_val_set(&provider, script)
         },
 
         _ => unimplemented!(),
@@ -246,9 +252,184 @@ fn get_general_category(gc_name: &str) -> Option<GeneralCategory> {
     })
 }
 
+fn get_script(script_name: &str) -> Option<Script> {
+    Some(match script_name {
+        "Adlam" | "Adlm" => Script::Adlam,
+        "Ahom" => Script::Ahom,
+        "Anatolian_Hieroglyphs" | "Hluw" => Script::AnatolianHieroglyphs,
+        "Arabic" | "Arab" => Script::Arabic,
+        "Armenian" | "Armn" => Script::Armenian,
+        "Avestan" | "Avst" => Script::Avestan,
+        "Balinese" | "Bali" => Script::Balinese,
+        "Bamum" | "Bamu" => Script::Bamum,
+        "Bassa_Vah" | "Bass" => Script::BassaVah,
+        "Batak" | "Batk" => Script::Batak,
+        "Bengali" | "Beng" => Script::Bengali,
+        "Bhaiksuki" | "Bhks" => Script::Bhaiksuki,
+        "Bopomofo" | "Bopo" => Script::Bopomofo,
+        "Brahmi" | "Brah" => Script::Brahmi,
+        "Braille" | "Brai" => Script::Braille,
+        "Buginese" | "Bugi" => Script::Buginese,
+        "Buhid" | "Buhd" => Script::Buhid,
+        "Canadian_Aboriginal" | "Cans" => Script::CanadianAboriginal,
+        "Carian" | "Cari" => Script::Carian,
+        "Caucasian_Albanian" | "Aghb" => Script::CaucasianAlbanian,
+        "Chakma" | "Cakm" => Script::Chakma,
+        "Cham" => Script::Cham,
+        "Cherokee" | "Cher" => Script::Cherokee,
+        "Chorasmian" | "Chrs" => Script::Chorasmian,
+        "Common" | "Zyyy" => Script::Common,
+        "Coptic" | "Copt" => Script::Coptic,
+        "Cuneiform" | "Xsux" => Script::Cuneiform,
+        "Cypriot" | "Cprt" => Script::Cypriot,
+        "Cypro_Minoan" | "Cpmn" => Script::CyproMinoan,
+        "Cyrillic" | "Cyrl" => Script::Cyrillic,
+        "Deseret" | "Dsrt" => Script::Deseret,
+        "Devanagari" | "Deva" => Script::Devanagari,
+        "Dives_Akuru" | "Diak" => Script::DivesAkuru,
+        "Dogra" | "Dogr" => Script::Dogra,
+        "Duployan" | "Dupl" => Script::Duployan,
+        "Egyptian_Hieroglyphs" | "Egyp" => Script::EgyptianHieroglyphs,
+        "Elbasan" | "Elba" => Script::Elbasan,
+        "Elymaic" | "Elym" => Script::Elymaic,
+        "Ethiopic" | "Ethi" => Script::Ethiopic,
+        "Georgian" | "Geor" => Script::Georgian,
+        "Glagolitic" | "Glag" => Script::Glagolitic,
+        "Gothic" | "Goth" => Script::Gothic,
+        "Grantha" | "Gran" => Script::Grantha,
+        "Greek" | "Grek" => Script::Greek,
+        "Gujarati" | "Gujr" => Script::Gujarati,
+        "Gunjala_Gondi" | "Gong" => Script::GunjalaGondi,
+        "Gurmukhi" | "Guru" => Script::Gurmukhi,
+        "Han" | "Hani" => Script::Han,
+        "Hangul" | "Hang" => Script::Hangul,
+        "Hanifi_Rohingya" | "Rohg" => Script::HanifiRohingya,
+        "Hanunoo" | "Hano" => Script::Hanunoo,
+        "Hatran" | "Hatr" => Script::Hatran,
+        "Hebrew" | "Hebr" => Script::Hebrew,
+        "Hiragana" | "Hira" => Script::Hiragana,
+        "Imperial_Aramaic" | "Armi" => Script::ImperialAramaic,
+        "Inherited" | "Zinh" => Script::Inherited,
+        "Inscriptional_Pahlavi" | "Phli" => Script::InscriptionalPahlavi,
+        "Inscriptional_Parthian" | "Prti" => Script::InscriptionalParthian,
+        "Javanese" | "Java" => Script::Javanese,
+        "Kaithi" | "Kthi" => Script::Kaithi,
+        "Kannada" | "Knda" => Script::Kannada,
+        "Katakana" | "Kana" => Script::Katakana,
+        "Kayah_Li" | "Kali" => Script::KayahLi,
+        "Kharoshthi" | "Khar" => Script::Kharoshthi,
+        "Khitan_Small_Script" | "Kits" => Script::KhitanSmallScript,
+        "Khmer" | "Khmr" => Script::Khmer,
+        "Khojki" | "Khoj" => Script::Khojki,
+        "Khudawadi" | "Sind" => Script::Khudawadi,
+        "Lao" | "Laoo" => Script::Lao,
+        "Latin" | "Latn" => Script::Latin,
+        "Lepcha" | "Lepc" => Script::Lepcha,
+        "Limbu" | "Limb" => Script::Limbu,
+        "Linear_A" | "Lina" => Script::LinearA,
+        "Linear_B" | "Linb" => Script::LinearB,
+        "Lisu" => Script::Lisu,
+        "Lycian" | "Lyci" => Script::Lycian,
+        "Lydian" | "Lydi" => Script::Lydian,
+        "Mahajani" | "Mahj" => Script::Mahajani,
+        "Makasar" | "Maka" => Script::Makasar,
+        "Malayalam" | "Mlym" => Script::Malayalam,
+        "Mandaic" | "Mand" => Script::Mandaic,
+        "Manichaean" | "Mani" => Script::Manichaean,
+        "Marchen" | "Marc" => Script::Marchen,
+        "Masaram_Gondi" | "Gonm" => Script::MasaramGondi,
+        "Medefaidrin" | "Medf" => Script::Medefaidrin,
+        "Meetei_Mayek" | "Mtei" => Script::MeeteiMayek,
+        "Mende_Kikakui" | "Mend" => Script::MendeKikakui,
+        "Meroitic_Cursive" | "Merc" => Script::MeroiticCursive,
+        "Meroitic_Hieroglyphs" | "Mero" => Script::MeroiticHieroglyphs,
+        "Miao" | "Plrd" => Script::Miao,
+        "Modi" => Script::Modi,
+        "Mongolian" | "Mong" => Script::Mongolian,
+        "Mro" | "Mroo" => Script::Mro,
+        "Multani" | "Mult" => Script::Multani,
+        "Myanmar" | "Mymr" => Script::Myanmar,
+        "Nabataean" | "Nbat" => Script::Nabataean,
+        "Nandinagari" | "Nand" => Script::Nandinagari,
+        "New_Tai_Lue" | "Talu" => Script::NewTaiLue,
+        "Newa" => Script::Newa,
+        "Nko" | "Nkoo" => Script::Nko,
+        "Nushu" | "Nshu" => Script::Nushu,
+        "Nyiakeng_Puachue_Hmong" | "Hmnp" => Script::NyiakengPuachueHmong,
+        "Ogham" | "Ogam" => Script::Ogham,
+        "Ol_Chiki" | "Olck" => Script::OlChiki,
+        "Old_Hungarian" | "Hung" => Script::OldHungarian,
+        "Old_Italic" | "Ital" => Script::OldItalic,
+        "Old_North_Arabian" | "Narb" => Script::OldNorthArabian,
+        "Old_Permic" | "Perm" => Script::OldPermic,
+        "Old_Persian" | "Xpeo" => Script::OldPersian,
+        "Old_Sogdian" | "Sogo" => Script::OldSogdian,
+        "Old_South_Arabian" | "Sarb" => Script::OldSouthArabian,
+        "Old_Turkic" | "Orkh" => Script::OldTurkic,
+        "Old_Uyghur" | "Ougr" => Script::OldUyghur,
+        "Oriya" | "Orya" => Script::Oriya,
+        "Osage" | "Osge" => Script::Osage,
+        "Osmanya" | "Osma" => Script::Osmanya,
+        "Pahawh_Hmong" | "Hmng" => Script::PahawhHmong,
+        "Palmyrene" | "Palm" => Script::Palmyrene,
+        "Pau_Cin_Hau" | "Pauc" => Script::PauCinHau,
+        "Phags_Pa" | "Phag" => Script::PhagsPa,
+        "Phoenician" | "Phnx" => Script::Phoenician,
+        "Psalter_Pahlavi" | "Phlp" => Script::PsalterPahlavi,
+        "Rejang" | "Rjng" => Script::Rejang,
+        "Runic" | "Runr" => Script::Runic,
+        "Samaritan" | "Samr" => Script::Samaritan,
+        "Saurashtra" | "Saur" => Script::Saurashtra,
+        "Sharada" | "Shrd" => Script::Sharada,
+        "Shavian" | "Shaw" => Script::Shavian,
+        "Siddham" | "Sidd" => Script::Siddham,
+        "SignWriting" | "Sgnw" => Script::SignWriting,
+        "Sinhala" | "Sinh" => Script::Sinhala,
+        "Sogdian" | "Sogd" => Script::Sogdian,
+        "Sora_Sompeng" | "Sora" => Script::SoraSompeng,
+        "Soyombo" | "Soyo" => Script::Soyombo,
+        "Sundanese" | "Sund" => Script::Sundanese,
+        "Syloti_Nagri" | "Sylo" => Script::SylotiNagri,
+        "Syriac" | "Syrc" => Script::Syriac,
+        "Tagalog" | "Tglg" => Script::Tagalog,
+        "Tagbanwa" | "Tagb" => Script::Tagbanwa,
+        "Tai_Le" | "Tale" => Script::TaiLe,
+        "Tai_Tham" | "Lana" => Script::TaiTham,
+        "Tai_Viet" | "Tavt" => Script::TaiViet,
+        "Takri" | "Takr" => Script::Takri,
+        "Tamil" | "Taml" => Script::Tamil,
+        "Tangsa" | "Tnsa" => Script::Tangsa,
+        "Tangut" | "Tang" => Script::Tangut,
+        "Telugu" | "Telu" => Script::Telugu,
+        "Thaana" | "Thaa" => Script::Thaana,
+        "Thai" => Script::Thai,
+        "Tibetan" | "Tibt" => Script::Tibetan,
+        "Tifinagh" | "Tfng" => Script::Tifinagh,
+        "Tirhuta" | "Tirh" => Script::Tirhuta,
+        "Toto" => Script::Toto,
+        "Ugaritic" | "Ugar" => Script::Ugaritic,
+        "Unknown" | "Zzzz" => Script::Unknown,
+        "Vai" | "Vaii" => Script::Vai,
+        "Vithkuqi" | "Vith" => Script::Vithkuqi,
+        "Wancho" | "Wcho" => Script::Wancho,
+        "Warang_Citi" | "Wara" => Script::WarangCiti,
+        "Yezidi" | "Yezi" => Script::Yezidi,
+        "Yi" | "Yiii" => Script::Yi,
+        "Zanabazar_Square" | "Zanb" => Script::ZanabazarSquare,
+        _ => return None
+    })
+}
+
 #[test]
 fn test_basic() {
     let whitespace1: UnicodeSet = get_unicode_set("space", None).unwrap();
     let whitespace2: UnicodeSet = get_unicode_set("White_Space", None).unwrap();
     assert_eq!(whitespace1.get_inversion_list(), whitespace2.get_inversion_list());
+}
+
+#[test]
+fn test_script() {
+    let cyrillic1: UnicodeSet = get_unicode_set("Script", Some("Cyrillic")).unwrap();
+    let cyrillic2: UnicodeSet = get_unicode_set("sc", Some("Cyrl")).unwrap();
+    assert_eq!(cyrillic1.get_inversion_list(), cyrillic2.get_inversion_list());
 }
