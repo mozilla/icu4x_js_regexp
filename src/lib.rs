@@ -1,5 +1,3 @@
-// TODO: License
-
 mod blob_provider;
 mod ffi;
 mod property;

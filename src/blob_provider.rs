@@ -1,5 +1,3 @@
-// TODO: license
-
 use icu_provider_blob::StaticDataProvider;
 
 const STATIC_STR_DATA: &[u8] =

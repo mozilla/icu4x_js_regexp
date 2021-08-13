@@ -1,5 +1,3 @@
-// TODO: license
-
 use crate::blob_provider;
 use icu_uniset::props::*;
 use icu_uniset::enum_props::{GeneralCategory, Script};
