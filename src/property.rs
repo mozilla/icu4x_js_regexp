@@ -1,7 +1,7 @@
 use crate::blob_provider;
 use icu_uniset::props::*;
 use icu_uniset::enum_props::{GeneralCategory, Script};
-use icu_uniset::UnicodeSet;
+use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
 
 pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<UnicodeSet> {
     let prop = get_property(prop_name)?;
@@ -68,6 +68,24 @@ pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<Unic
             let script = get_script(prop_value?)?;
             get_script_val_set(&provider, script)
         },
+
+        Property::Ascii => {
+            let mut builder = UnicodeSetBuilder::new();
+            builder.add_range(&('\u{0}'..='\u{7f}'));
+            Ok(builder.build())
+        },
+        Property::Any => {
+            Ok(UnicodeSet::all())
+        },
+        Property::Assigned => {
+            let mut builder = UnicodeSetBuilder::new();
+            let unassigned = get_general_category_val_set(&provider,
+                                                          GeneralCategory::Unassigned)
+                .expect("Static data should include Gc=Unassigned");
+            builder.add_set(&unassigned);
+            builder.complement();
+            Ok(builder.build())
+        }
 
         _ => unimplemented!(),
     }
@@ -430,4 +448,20 @@ fn test_script() {
     let cyrillic1: UnicodeSet = get_unicode_set("Script", Some("Cyrillic")).unwrap();
     let cyrillic2: UnicodeSet = get_unicode_set("sc", Some("Cyrl")).unwrap();
     assert_eq!(cyrillic1.get_inversion_list(), cyrillic2.get_inversion_list());
+}
+
+#[test]
+fn test_special() {
+    let any = get_unicode_set("Any", None).unwrap();
+    assert_eq!(any.get_inversion_list(), vec![0, char::MAX as u32 + 1]);
+
+    let ascii = get_unicode_set("ASCII", None).unwrap();
+    assert_eq!(ascii.get_inversion_list(), vec![0, 0x80]);
+
+    let assigned = get_unicode_set("Assigned", None).unwrap();
+    let unassigned = get_unicode_set("General_Category", Some("Unassigned")).unwrap();
+    let mut builder = UnicodeSetBuilder::new();
+    builder.add_set(&assigned);
+    builder.add_set(&unassigned);
+    assert_eq!(builder.build().get_inversion_list(), any.get_inversion_list());
 }
