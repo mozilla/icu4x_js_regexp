@@ -21,6 +21,10 @@ public:
 
   bool exists() const { return !!inner_; }
 
+  void complement() {
+    inner_.reset(icu4x_uniset_complemented(inner_.release()));
+  }
+
   size_t getRangeCount() const {
     return icu4x_uniset_get_range_count(inner_.get());
   }
