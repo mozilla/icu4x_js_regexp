@@ -11,7 +11,7 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
-icu_provider = { git = "https://github.com/iainireland/icu4x.git", rev = "3f0c312a53807e95c3dc2dea5fae012fceffffba" }
-icu_provider_blob = { git = "https://github.com/iainireland/icu4x.git", rev = "3f0c312a53807e95c3dc2dea5fae012fceffffba", features = ["export"] }
-icu_provider_uprops = { git = "https://github.com/iainireland/icu4x.git", rev = "3f0c312a53807e95c3dc2dea5fae012fceffffba" }
-icu_uniset = { git = "https://github.com/iainireland/icu4x.git", rev = "3f0c312a53807e95c3dc2dea5fae012fceffffba" }
+icu_provider = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
+icu_provider_blob = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1", features = ["export"] }
+icu_provider_uprops = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
+icu_uniset = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
