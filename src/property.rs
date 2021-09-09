@@ -1,6 +1,6 @@
 use crate::blob_provider;
-use icu_uniset::props::*;
 use icu_uniset::enum_props::{GeneralCategory, Script};
+use icu_uniset::props::*;
 use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
 
 /// This implements the evaluation of the
@@ -18,7 +18,7 @@ use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
 pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<UnicodeSet> {
     match prop_value {
         Some(value) => get_unicode_set_by_name_and_value(prop_name, value),
-        None => get_unicode_set_by_name(prop_name)
+        None => get_unicode_set_by_name(prop_name),
     }
 }
 
@@ -34,12 +34,12 @@ fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Optio
         EnumeratedProperty::GeneralCategory => {
             let category = get_general_category(prop_value)?;
             get_general_category_val_set(&provider, category)
-        },
+        }
 
         EnumeratedProperty::Script => {
             let script = get_script(prop_value)?;
             get_script_val_set(&provider, script)
-        },
+        }
 
         EnumeratedProperty::ScriptExtension => {
             todo!("Script_Extensions")
@@ -51,7 +51,7 @@ fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Optio
     Some(set)
 }
 
-// UnicodePropertyValueExpression :: LoneUnicodePropertyNameOrValue 
+// UnicodePropertyValueExpression :: LoneUnicodePropertyNameOrValue
 fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
     let provider = blob_provider::get_static_provider();
 
@@ -59,7 +59,7 @@ fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
     if let Some(general_category) = get_general_category(prop_name) {
         let set = get_general_category_val_set(&provider, general_category)
             .expect("Static data should be available for all properties");
-        return Some(set)
+        return Some(set);
     }
 
     // Step 3.
@@ -123,14 +123,11 @@ fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
             let mut builder = UnicodeSetBuilder::new();
             builder.add_range(&('\u{0}'..='\u{7f}'));
             Ok(builder.build())
-        },
-        BP::Any => {
-            Ok(UnicodeSet::all())
-        },
+        }
+        BP::Any => Ok(UnicodeSet::all()),
         BP::Assigned => {
             let mut builder = UnicodeSetBuilder::new();
-            let unassigned = get_general_category_val_set(&provider,
-                                                          GeneralCategory::Unassigned)
+            let unassigned = get_general_category_val_set(&provider, GeneralCategory::Unassigned)
                 .expect("Static data should include Gc=Unassigned");
             builder.add_set(&unassigned);
             builder.complement();
@@ -156,7 +153,7 @@ fn get_enumerated_property(prop_name: &str) -> Option<EnumeratedProperty> {
         "Script" | "sc" => EnumeratedProperty::Script,
         "Script_Extensions" | "scx" => EnumeratedProperty::ScriptExtension,
 
-        _ => return None
+        _ => return None,
     })
 }
 
@@ -302,7 +299,7 @@ fn get_general_category(gc_name: &str) -> Option<GeneralCategory> {
         "Lowercase_Letter" | "Ll" => GeneralCategory::LowercaseLetter,
         "Mark" | "M" | "Combining_Mark" => GeneralCategory::Mark,
         "Math_Symbol" | "Sm" => GeneralCategory::MathSymbol,
-        "Modifier_Letter" |"Lm" => GeneralCategory::ModifierLetter,
+        "Modifier_Letter" | "Lm" => GeneralCategory::ModifierLetter,
         "Modifier_Symbol" | "Sk" => GeneralCategory::ModifierSymbol,
         "Nonspacing_Mark" | "Mn" => GeneralCategory::NonspacingMark,
         "Number" | "N" => GeneralCategory::Number,
@@ -321,9 +318,9 @@ fn get_general_category(gc_name: &str) -> Option<GeneralCategory> {
         "Surrogate" | "Cs" => GeneralCategory::Surrogate,
         "Symbol" | "S" => GeneralCategory::Symbol,
         "Titlecase_Letter" | "Lt" => GeneralCategory::TitlecaseLetter,
-        "Unassigned" | 	"Cn" => GeneralCategory::Unassigned,
+        "Unassigned" | "Cn" => GeneralCategory::Unassigned,
         "Uppercase_Letter" | "Lu" => GeneralCategory::UppercaseLetter,
-        _ => return None
+        _ => return None,
     })
 }
 
@@ -493,7 +490,7 @@ fn get_script(script_name: &str) -> Option<Script> {
         "Yezidi" | "Yezi" => Script::Yezidi,
         "Yi" | "Yiii" => Script::Yi,
         "Zanabazar_Square" | "Zanb" => Script::ZanabazarSquare,
-        _ => return None
+        _ => return None,
     })
 }
 
@@ -501,7 +498,10 @@ fn get_script(script_name: &str) -> Option<Script> {
 fn test_basic() {
     let whitespace1: UnicodeSet = get_unicode_set("space", None).unwrap();
     let whitespace2: UnicodeSet = get_unicode_set("White_Space", None).unwrap();
-    assert_eq!(whitespace1.get_inversion_list(), whitespace2.get_inversion_list());
+    assert_eq!(
+        whitespace1.get_inversion_list(),
+        whitespace2.get_inversion_list()
+    );
     assert!(whitespace1.contains(' '));
 }
 
@@ -509,7 +509,10 @@ fn test_basic() {
 fn test_script() {
     let cyrillic1: UnicodeSet = get_unicode_set("Script", Some("Cyrillic")).unwrap();
     let cyrillic2: UnicodeSet = get_unicode_set("sc", Some("Cyrl")).unwrap();
-    assert_eq!(cyrillic1.get_inversion_list(), cyrillic2.get_inversion_list());
+    assert_eq!(
+        cyrillic1.get_inversion_list(),
+        cyrillic2.get_inversion_list()
+    );
     assert!(cyrillic1.contains('\u{0410}')); // U+0410 CYRILLIC CAPITAL LETTER A
 }
 
@@ -526,5 +529,8 @@ fn test_special() {
     let mut builder = UnicodeSetBuilder::new();
     builder.add_set(&assigned);
     builder.add_set(&unassigned);
-    assert_eq!(builder.build().get_inversion_list(), any.get_inversion_list());
+    assert_eq!(
+        builder.build().get_inversion_list(),
+        any.get_inversion_list()
+    );
 }

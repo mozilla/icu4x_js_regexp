@@ -31,9 +31,7 @@ pub unsafe extern "C" fn icu4x_uniset_create_for_property(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn icu4x_uniset_complemented(
-    uniset: *mut ICU4XUniset
-) -> *mut ICU4XUniset {
+pub unsafe extern "C" fn icu4x_uniset_complemented(uniset: *mut ICU4XUniset) -> *mut ICU4XUniset {
     let set = Box::from_raw(uniset);
     let mut builder = UnicodeSetBuilder::new();
     builder.add_set(&set);
@@ -49,17 +47,23 @@ pub unsafe extern "C" fn icu4x_uniset_get_range_count(uniset: *const ICU4XUniset
 #[no_mangle]
 pub unsafe extern "C" fn icu4x_uniset_get_range_start(
     uniset: *const ICU4XUniset,
-    index: usize
+    index: usize,
 ) -> u32 {
-    (&*uniset).get_nth_range(index).map(|range| *range.start()).unwrap_or(0)
+    (&*uniset)
+        .get_nth_range(index)
+        .map(|range| *range.start())
+        .unwrap_or(0)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn icu4x_uniset_get_range_end(
     uniset: *const ICU4XUniset,
-    index: usize
+    index: usize,
 ) -> u32 {
-    (&*uniset).get_nth_range(index).map(|range| *range.end()).unwrap_or(0)
+    (&*uniset)
+        .get_nth_range(index)
+        .map(|range| *range.end())
+        .unwrap_or(0)
 }
 
 #[no_mangle]

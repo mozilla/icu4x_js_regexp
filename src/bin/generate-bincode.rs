@@ -17,9 +17,9 @@ fn output_path() -> PathBuf {
 fn get_all_uprops_keys() -> Vec<ResourceKey> {
     let mut keys = vec![];
 
-    // Keys are supported if a corresponding .toml file exists in `/data`.
+    // Keys are supported if a corresponding .toml file exists in `/data/raw`.
     for key in &icu_uniset::provider::key::ALL_KEYS {
-        let name = key.sub_category.split("=").collect::<Vec<_>>()[0];
+        let name = key.sub_category.split('=').collect::<Vec<_>>()[0];
         let mut path = raw_data_dir().clone().join(&*name);
         path.set_extension("toml");
         if path.exists() {
