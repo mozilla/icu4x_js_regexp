@@ -3,81 +3,131 @@ use icu_uniset::props::*;
 use icu_uniset::enum_props::{GeneralCategory, Script};
 use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
 
+/// This implements the evaluation of the
+/// [UnicodePropertyValueExpression production](
+/// https://tc39.es/ecma262/multipage/text-processing.html#prod-UnicodePropertyValueExpression)
+/// of the ECMAScript specification. Given a property name and an
+/// optional property value, this returns the UnicodeSet of characters
+/// matching that property, if it exists.
+///
+/// Note that the algorithm defined by ECMA262 differs from the
+/// matching rules for symbolic values in
+/// [UAX44](https://unicode.org/reports/tr44/#Matching_Symbolic):
+/// case, whitespace, dashes, and underscores are not ignored, and the
+/// Is prefix is not supported.
 pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<UnicodeSet> {
-    let prop = get_property(prop_name)?;
+    match prop_value {
+        Some(value) => get_unicode_set_by_name_and_value(prop_name, value),
+        None => get_unicode_set_by_name(prop_name)
+    }
+}
 
+//  UnicodePropertyValueExpression :: UnicodePropertyName = UnicodePropertyValue
+fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Option<UnicodeSet> {
     let provider = blob_provider::get_static_provider();
-    let set = match prop {
-        Property::Alphabetic => get_alphabetic_property(&provider),
-        Property::AsciiHexDigit => get_ascii_hex_digit_property(&provider),
-        Property::BidiControl => get_bidi_control_property(&provider),
-        Property::BidiMirrored => get_bidi_mirrored_property(&provider),
-        Property::CaseIgnorable => get_case_ignorable_property(&provider),
-        Property::Cased => get_cased_property(&provider),
-        Property::ChangesWhenCasefolded => get_changes_when_casefolded_property(&provider),
-        Property::ChangesWhenCasemapped => get_changes_when_casemapped_property(&provider),
-        Property::ChangesWhenLowercased => get_changes_when_lowercased_property(&provider),
-        Property::ChangesWhenNfkcCasefolded => get_changes_when_nfkc_casefolded_property(&provider),
-        Property::ChangesWhenTitlecased => get_changes_when_titlecased_property(&provider),
-        Property::ChangesWhenUppercased => get_changes_when_uppercased_property(&provider),
-        Property::Dash => get_dash_property(&provider),
-        Property::DefaultIgnorableCodePoint => get_default_ignorable_code_point_property(&provider),
-        Property::Deprecated => get_deprecated_property(&provider),
-        Property::Diacritic => get_diacritic_property(&provider),
-        Property::Emoji => get_emoji_property(&provider),
-        Property::EmojiComponent => get_emoji_component_property(&provider),
-        Property::EmojiModifierBase => get_emoji_modifier_base_property(&provider),
-        Property::EmojiModifier => get_emoji_modifier_property(&provider),
-        Property::EmojiPresentation => get_emoji_presentation_property(&provider),
-        Property::ExtendedPictographic => get_extended_pictographic_property(&provider),
-        Property::Extender => get_extender_property(&provider),
-        Property::GraphemeBase => get_grapheme_base_property(&provider),
-        Property::GraphemeExtend => get_grapheme_extend_property(&provider),
-        Property::HexDigit => get_hex_digit_property(&provider),
-        Property::IdContinue => get_id_continue_property(&provider),
-        Property::IdStart => get_id_start_property(&provider),
-        Property::Ideographic => get_ideographic_property(&provider),
-        Property::IdsBinaryOperator => get_ids_binary_operator_property(&provider),
-        Property::IdsTrinaryOperator => get_ids_trinary_operator_property(&provider),
-        Property::JoinControl => get_join_control_property(&provider),
-        Property::LogicalOrderException => get_logical_order_exception_property(&provider),
-        Property::Lowercase => get_lowercase_property(&provider),
-        Property::Math => get_math_property(&provider),
-        Property::NoncharacterCodePoint => get_noncharacter_code_point_property(&provider),
-        Property::PatternSyntax => get_pattern_syntax_property(&provider),
-        Property::PatternWhiteSpace => get_pattern_white_space_property(&provider),
-        Property::QuotationMark => get_quotation_mark_property(&provider),
-        Property::Radical => get_radical_property(&provider),
-        Property::RegionalIndicator => get_regional_indicator_property(&provider),
-        Property::SoftDotted => get_soft_dotted_property(&provider),
-        Property::SentenceTerminal => get_sentence_terminal_property(&provider),
-        Property::TerminalPunctuation => get_terminal_punctuation_property(&provider),
-        Property::UnifiedIdeograph => get_unified_ideograph_property(&provider),
-        Property::Uppercase => get_uppercase_property(&provider),
-        Property::VariationSelector => get_variation_selector_property(&provider),
-        Property::WhiteSpace => get_white_space_property(&provider),
-        Property::XidContinue => get_xid_continue_property(&provider),
-        Property::XidStart => get_xid_start_property(&provider),
 
-        Property::GeneralCategory => {
-            let category = get_general_category(prop_value?)?;
+    // Steps 1-3
+    let prop = get_enumerated_property(prop_name)?;
+
+    // Steps 4-5
+    let set = match prop {
+        EnumeratedProperty::GeneralCategory => {
+            let category = get_general_category(prop_value)?;
             get_general_category_val_set(&provider, category)
         },
 
-        Property::Script => {
-            let script = get_script(prop_value?)?;
+        EnumeratedProperty::Script => {
+            let script = get_script(prop_value)?;
             get_script_val_set(&provider, script)
         },
 
-        Property::Ascii => {
+        EnumeratedProperty::ScriptExtension => {
+            todo!("Script_Extensions")
+        }
+    }
+    .expect("Static data should be available for all properties");
+
+    // Step 6
+    Some(set)
+}
+
+// UnicodePropertyValueExpression :: LoneUnicodePropertyNameOrValue 
+fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
+    let provider = blob_provider::get_static_provider();
+
+    // Steps 1-2.
+    if let Some(general_category) = get_general_category(prop_name) {
+        let set = get_general_category_val_set(&provider, general_category)
+            .expect("Static data should be available for all properties");
+        return Some(set)
+    }
+
+    // Step 3.
+    let prop = get_binary_property(prop_name)?;
+
+    // Steps 4-5.
+    use BinaryProperty as BP;
+    let set = match prop {
+        BP::Alphabetic => get_alphabetic_property(&provider),
+        BP::AsciiHexDigit => get_ascii_hex_digit_property(&provider),
+        BP::BidiControl => get_bidi_control_property(&provider),
+        BP::BidiMirrored => get_bidi_mirrored_property(&provider),
+        BP::CaseIgnorable => get_case_ignorable_property(&provider),
+        BP::Cased => get_cased_property(&provider),
+        BP::ChangesWhenCasefolded => get_changes_when_casefolded_property(&provider),
+        BP::ChangesWhenCasemapped => get_changes_when_casemapped_property(&provider),
+        BP::ChangesWhenLowercased => get_changes_when_lowercased_property(&provider),
+        BP::ChangesWhenNfkcCasefolded => get_changes_when_nfkc_casefolded_property(&provider),
+        BP::ChangesWhenTitlecased => get_changes_when_titlecased_property(&provider),
+        BP::ChangesWhenUppercased => get_changes_when_uppercased_property(&provider),
+        BP::Dash => get_dash_property(&provider),
+        BP::DefaultIgnorableCodePoint => get_default_ignorable_code_point_property(&provider),
+        BP::Deprecated => get_deprecated_property(&provider),
+        BP::Diacritic => get_diacritic_property(&provider),
+        BP::Emoji => get_emoji_property(&provider),
+        BP::EmojiComponent => get_emoji_component_property(&provider),
+        BP::EmojiModifierBase => get_emoji_modifier_base_property(&provider),
+        BP::EmojiModifier => get_emoji_modifier_property(&provider),
+        BP::EmojiPresentation => get_emoji_presentation_property(&provider),
+        BP::ExtendedPictographic => get_extended_pictographic_property(&provider),
+        BP::Extender => get_extender_property(&provider),
+        BP::GraphemeBase => get_grapheme_base_property(&provider),
+        BP::GraphemeExtend => get_grapheme_extend_property(&provider),
+        BP::HexDigit => get_hex_digit_property(&provider),
+        BP::IdContinue => get_id_continue_property(&provider),
+        BP::IdStart => get_id_start_property(&provider),
+        BP::Ideographic => get_ideographic_property(&provider),
+        BP::IdsBinaryOperator => get_ids_binary_operator_property(&provider),
+        BP::IdsTrinaryOperator => get_ids_trinary_operator_property(&provider),
+        BP::JoinControl => get_join_control_property(&provider),
+        BP::LogicalOrderException => get_logical_order_exception_property(&provider),
+        BP::Lowercase => get_lowercase_property(&provider),
+        BP::Math => get_math_property(&provider),
+        BP::NoncharacterCodePoint => get_noncharacter_code_point_property(&provider),
+        BP::PatternSyntax => get_pattern_syntax_property(&provider),
+        BP::PatternWhiteSpace => get_pattern_white_space_property(&provider),
+        BP::QuotationMark => get_quotation_mark_property(&provider),
+        BP::Radical => get_radical_property(&provider),
+        BP::RegionalIndicator => get_regional_indicator_property(&provider),
+        BP::SoftDotted => get_soft_dotted_property(&provider),
+        BP::SentenceTerminal => get_sentence_terminal_property(&provider),
+        BP::TerminalPunctuation => get_terminal_punctuation_property(&provider),
+        BP::UnifiedIdeograph => get_unified_ideograph_property(&provider),
+        BP::Uppercase => get_uppercase_property(&provider),
+        BP::VariationSelector => get_variation_selector_property(&provider),
+        BP::WhiteSpace => get_white_space_property(&provider),
+        BP::XidContinue => get_xid_continue_property(&provider),
+        BP::XidStart => get_xid_start_property(&provider),
+
+        BP::Ascii => {
             let mut builder = UnicodeSetBuilder::new();
             builder.add_range(&('\u{0}'..='\u{7f}'));
             Ok(builder.build())
         },
-        Property::Any => {
+        BP::Any => {
             Ok(UnicodeSet::all())
         },
-        Property::Assigned => {
+        BP::Assigned => {
             let mut builder = UnicodeSetBuilder::new();
             let unassigned = get_general_category_val_set(&provider,
                                                           GeneralCategory::Unassigned)
@@ -86,17 +136,33 @@ pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<Unic
             builder.complement();
             Ok(builder.build())
         }
-
-        _ => unimplemented!(),
     }
-    .expect("Static data should cover all properties");
+    .expect("Static data should be available for all properties");
 
     Some(set)
 }
 
-// The set of properties supported by the ECMAScript language specification.
-enum Property {
-    // Binary properties: https://tc39.es/ecma262/#table-binary-unicode-properties
+// Table 69: Non-binary Unicode property aliases and their canonical property names
+// https://tc39.es/ecma262/multipage/text-processing.html#table-nonbinary-unicode-properties
+enum EnumeratedProperty {
+    GeneralCategory,
+    Script,
+    ScriptExtension,
+}
+
+fn get_enumerated_property(prop_name: &str) -> Option<EnumeratedProperty> {
+    Some(match prop_name {
+        "General_Category" | "gc" => EnumeratedProperty::GeneralCategory,
+        "Script" | "sc" => EnumeratedProperty::Script,
+        "Script_Extensions" | "scx" => EnumeratedProperty::ScriptExtension,
+
+        _ => return None
+    })
+}
+
+// Table 70: Binary Unicode property aliases and their canonical property names
+// https://tc39.es/ecma262/multipage/text-processing.html#table-binary-unicode-properties
+enum BinaryProperty {
     Alphabetic,
     AsciiHexDigit,
     BidiControl,
@@ -148,82 +214,75 @@ enum Property {
     XidContinue,
     XidStart,
 
-    // Enumerated properties: https://tc39.es/ecma262/#table-nonbinary-unicode-properties
-    GeneralCategory,
-    Script,
-    ScriptExtension,
-
     // Special cases: See https://unicode.org/reports/tr18/#General_Category_Property
     Ascii,
     Any,
     Assigned,
 }
 
-fn get_property(prop_name: &str) -> Option<Property> {
+fn get_binary_property(prop_name: &str) -> Option<BinaryProperty> {
     Some(match prop_name {
-        "Alphabetic" | "Alpha" => Property::Alphabetic,
-        "ASCII_Hex_Digit" | "AHex" => Property::AsciiHexDigit,
-        "Bidi_Control" | "Bidi_C" => Property::BidiControl,
-        "Bidi_Mirrored" | "Bidi_M" => Property::BidiMirrored,
-        "Case_Ignorable" | "CI" => Property::CaseIgnorable,
-        "Cased" => Property::Cased,
-        "Changes_When_Casefolded" | "CWCF" => Property::ChangesWhenCasefolded,
-        "Changes_When_Casemapped" | "CWCM" => Property::ChangesWhenCasemapped,
-        "Changes_When_Lowercased" | "CWL" => Property::ChangesWhenLowercased,
-        "Changes_When_NFKC_Casefolded" | "CWKCF" => Property::ChangesWhenNfkcCasefolded,
-        "Changes_When_Titlecased" | "CWT" => Property::ChangesWhenTitlecased,
-        "Changes_When_Uppercased" | "CWU" => Property::ChangesWhenUppercased,
-        "Dash" => Property::Dash,
-        "Default_Ignorable_Code_Point" | "DI" => Property::DefaultIgnorableCodePoint,
-        "Deprecated" | "Dep" => Property::Deprecated,
-        "Diacritic" | "Dia" => Property::Diacritic,
-        "Emoji" => Property::Emoji,
-        "Emoji_Component" | "EComp" => Property::EmojiComponent,
-        "Emoji_Modifier_Base" | "EBase" => Property::EmojiModifierBase,
-        "Emoji_Modifier" | "EMod" => Property::EmojiModifier,
-        "Emoji_Presentation" | "EPres" => Property::EmojiPresentation,
-        "Extended_Pictographic" | "ExtPict" => Property::ExtendedPictographic,
-        "Extender" | "Ext" => Property::Extender,
-        "Grapheme_Base" | "Gr_Base" => Property::GraphemeBase,
-        "Grapheme_Extend" | "Gr_Ext" => Property::GraphemeExtend,
-        "Hex_Digit" | "Hex" => Property::HexDigit,
-        "IDS_Binary_Operator" | "IDSB" => Property::IdsBinaryOperator,
-        "IDS_Trinary_Operator" | "IDST" => Property::IdsTrinaryOperator,
-        "Id_Continue" | "IDC" => Property::IdContinue,
-        "Id_Start" | "IDS" => Property::IdStart,
-        "Ideographic" | "Ideo" => Property::Ideographic,
-        "Join_Control" | "JoinC" => Property::JoinControl,
-        "Logical_Order_Exception" | "LOE" => Property::LogicalOrderException,
-        "Lowercase" | "Lower" => Property::Lowercase,
-        "Math" => Property::Math,
-        "Noncharacter_Code_Point" | "NChar" => Property::NoncharacterCodePoint,
-        "Pattern_Syntax" | "Pat_Syn" => Property::PatternSyntax,
-        "Pattern_White_Space" | "Pat_WS" => Property::PatternWhiteSpace,
-        "Quotation_Mark" | "QMark" => Property::QuotationMark,
-        "Radical" => Property::Radical,
-        "Regional_Indicator" | "RI" => Property::RegionalIndicator,
-        "SentenceTerminal" | "STerm" => Property::SentenceTerminal,
-        "Soft_Dotted" | "SD" => Property::SoftDotted,
-        "Terminal_Punctuation" | "Term" => Property::TerminalPunctuation,
-        "Unified_Ideograph" | "UIdeo" => Property::UnifiedIdeograph,
-        "Uppercase" | "Upper" => Property::Uppercase,
-        "Variation_Selector" | "VS" => Property::VariationSelector,
-        "White_Space" | "space" => Property::WhiteSpace,
-        "Xid_Continue" | "XIDC" => Property::XidContinue,
-        "Xid_Start" | "XIDS" => Property::XidStart,
+        "Alphabetic" | "Alpha" => BinaryProperty::Alphabetic,
+        "ASCII_Hex_Digit" | "AHex" => BinaryProperty::AsciiHexDigit,
+        "Bidi_Control" | "Bidi_C" => BinaryProperty::BidiControl,
+        "Bidi_Mirrored" | "Bidi_M" => BinaryProperty::BidiMirrored,
+        "Case_Ignorable" | "CI" => BinaryProperty::CaseIgnorable,
+        "Cased" => BinaryProperty::Cased,
+        "Changes_When_Casefolded" | "CWCF" => BinaryProperty::ChangesWhenCasefolded,
+        "Changes_When_Casemapped" | "CWCM" => BinaryProperty::ChangesWhenCasemapped,
+        "Changes_When_Lowercased" | "CWL" => BinaryProperty::ChangesWhenLowercased,
+        "Changes_When_NFKC_Casefolded" | "CWKCF" => BinaryProperty::ChangesWhenNfkcCasefolded,
+        "Changes_When_Titlecased" | "CWT" => BinaryProperty::ChangesWhenTitlecased,
+        "Changes_When_Uppercased" | "CWU" => BinaryProperty::ChangesWhenUppercased,
+        "Dash" => BinaryProperty::Dash,
+        "Default_Ignorable_Code_Point" | "DI" => BinaryProperty::DefaultIgnorableCodePoint,
+        "Deprecated" | "Dep" => BinaryProperty::Deprecated,
+        "Diacritic" | "Dia" => BinaryProperty::Diacritic,
+        "Emoji" => BinaryProperty::Emoji,
+        "Emoji_Component" | "EComp" => BinaryProperty::EmojiComponent,
+        "Emoji_Modifier_Base" | "EBase" => BinaryProperty::EmojiModifierBase,
+        "Emoji_Modifier" | "EMod" => BinaryProperty::EmojiModifier,
+        "Emoji_Presentation" | "EPres" => BinaryProperty::EmojiPresentation,
+        "Extended_Pictographic" | "ExtPict" => BinaryProperty::ExtendedPictographic,
+        "Extender" | "Ext" => BinaryProperty::Extender,
+        "Grapheme_Base" | "Gr_Base" => BinaryProperty::GraphemeBase,
+        "Grapheme_Extend" | "Gr_Ext" => BinaryProperty::GraphemeExtend,
+        "Hex_Digit" | "Hex" => BinaryProperty::HexDigit,
+        "IDS_Binary_Operator" | "IDSB" => BinaryProperty::IdsBinaryOperator,
+        "IDS_Trinary_Operator" | "IDST" => BinaryProperty::IdsTrinaryOperator,
+        "Id_Continue" | "IDC" => BinaryProperty::IdContinue,
+        "Id_Start" | "IDS" => BinaryProperty::IdStart,
+        "Ideographic" | "Ideo" => BinaryProperty::Ideographic,
+        "Join_Control" | "JoinC" => BinaryProperty::JoinControl,
+        "Logical_Order_Exception" | "LOE" => BinaryProperty::LogicalOrderException,
+        "Lowercase" | "Lower" => BinaryProperty::Lowercase,
+        "Math" => BinaryProperty::Math,
+        "Noncharacter_Code_Point" | "NChar" => BinaryProperty::NoncharacterCodePoint,
+        "Pattern_Syntax" | "Pat_Syn" => BinaryProperty::PatternSyntax,
+        "Pattern_White_Space" | "Pat_WS" => BinaryProperty::PatternWhiteSpace,
+        "Quotation_Mark" | "QMark" => BinaryProperty::QuotationMark,
+        "Radical" => BinaryProperty::Radical,
+        "Regional_Indicator" | "RI" => BinaryProperty::RegionalIndicator,
+        "SentenceTerminal" | "STerm" => BinaryProperty::SentenceTerminal,
+        "Soft_Dotted" | "SD" => BinaryProperty::SoftDotted,
+        "Terminal_Punctuation" | "Term" => BinaryProperty::TerminalPunctuation,
+        "Unified_Ideograph" | "UIdeo" => BinaryProperty::UnifiedIdeograph,
+        "Uppercase" | "Upper" => BinaryProperty::Uppercase,
+        "Variation_Selector" | "VS" => BinaryProperty::VariationSelector,
+        "White_Space" | "space" => BinaryProperty::WhiteSpace,
+        "Xid_Continue" | "XIDC" => BinaryProperty::XidContinue,
+        "Xid_Start" | "XIDS" => BinaryProperty::XidStart,
 
-        "General_Category" | "gc" => Property::GeneralCategory,
-        "Script" | "sc" => Property::Script,
-        "Script_Extensions" | "scx" => Property::ScriptExtension,
-
-        "ASCII" => Property::Ascii,
-        "Any" => Property::Any,
-        "Assigned" => Property::Assigned,
+        "ASCII" => BinaryProperty::Ascii,
+        "Any" => BinaryProperty::Any,
+        "Assigned" => BinaryProperty::Assigned,
 
         _ => return None,
     })
 }
 
+// Table 71: Value aliases and canonical values for the Unicode property General_Category
+// https://tc39.es/ecma262/multipage/text-processing.html#table-unicode-general-category-values
 fn get_general_category(gc_name: &str) -> Option<GeneralCategory> {
     Some(match gc_name {
         "Cased_Letter" | "LC" => GeneralCategory::CasedLetter,
@@ -268,6 +327,8 @@ fn get_general_category(gc_name: &str) -> Option<GeneralCategory> {
     })
 }
 
+// Table 72: Value aliases and canonical values for the Unicode properties Script and Script_Extensions.
+// https://tc39.es/ecma262/multipage/text-processing.html#table-unicode-script-values
 fn get_script(script_name: &str) -> Option<Script> {
     Some(match script_name {
         "Adlam" | "Adlm" => Script::Adlam,
@@ -441,6 +502,7 @@ fn test_basic() {
     let whitespace1: UnicodeSet = get_unicode_set("space", None).unwrap();
     let whitespace2: UnicodeSet = get_unicode_set("White_Space", None).unwrap();
     assert_eq!(whitespace1.get_inversion_list(), whitespace2.get_inversion_list());
+    assert!(whitespace1.contains(' '));
 }
 
 #[test]
@@ -448,6 +510,7 @@ fn test_script() {
     let cyrillic1: UnicodeSet = get_unicode_set("Script", Some("Cyrillic")).unwrap();
     let cyrillic2: UnicodeSet = get_unicode_set("sc", Some("Cyrl")).unwrap();
     assert_eq!(cyrillic1.get_inversion_list(), cyrillic2.get_inversion_list());
+    assert!(cyrillic1.contains('\u{0410}')); // U+0410 CYRILLIC CAPITAL LETTER A
 }
 
 #[test]
