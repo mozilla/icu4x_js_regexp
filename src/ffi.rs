@@ -1,3 +1,6 @@
+// This file is licensed under the same terms as ICU4X.
+// For details, please see the LICENSE file.
+
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::ptr;

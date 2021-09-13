@@ -1,3 +1,6 @@
+// This file is licensed under the same terms as ICU4X.
+// For details, please see the LICENSE file.
+
 #ifndef ICU4X_JS_REGEXP_HPP
 #define ICU4X_JS_REGEXP_HPP
 

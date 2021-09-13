@@ -1,3 +1,6 @@
+// This file is licensed under the same terms as ICU4X.
+// For details, please see the LICENSE file.
+
 use icu_provider_blob::StaticDataProvider;
 
 const STATIC_STR_DATA: &[u8] =

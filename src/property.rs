@@ -1,3 +1,6 @@
+// This file is licensed under the same terms as ICU4X.
+// For details, please see the LICENSE file.
+
 use crate::blob_provider;
 use icu_uniset::enum_props::{GeneralCategory, Script};
 use icu_uniset::props::*;
