@@ -2,7 +2,7 @@
 # For details, please see the LICENSE file.
 
 [package]
-name = "icu4x-js-regexp"
+name = "icu4x_js_regexp"
 version = "0.1.0"
 authors = ["Iain Ireland <iireland@mozilla.com>"]
 edition = "2018"
@@ -13,7 +13,7 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
-icu_provider = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
-icu_provider_blob = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1", features = ["export"] }
-icu_provider_uprops = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
-icu_uniset = { git = "https://github.com/iainireland/icu4x.git", rev = "0194772dbe4f9c6df4c19d2a1b618c1f6f08fbc1" }
+icu_provider = { git = "https://github.com/unicode-org/icu4x.git" }
+icu_provider_blob = { git = "https://github.com/unicode-org/icu4x.git", features = ["export"] }
+icu_provider_uprops = { git = "https://github.com/unicode-org/icu4x.git" }
+icu_uniset = { git = "https://github.com/unicode-org/icu4x.git" }
