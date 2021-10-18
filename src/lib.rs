@@ -4,5 +4,7 @@
 mod blob_provider;
 mod ffi;
 mod property;
+mod uniset;
 
 pub use property::get_unicode_set;
+pub use uniset::ICU4XUniset;

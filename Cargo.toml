@@ -16,6 +16,7 @@ path = "src/lib.rs"
 icu_provider = { git = "https://github.com/unicode-org/icu4x.git" }
 icu_provider_blob = { git = "https://github.com/unicode-org/icu4x.git" }
 icu_uniset = { git = "https://github.com/unicode-org/icu4x.git" }
+once_cell = "1.8.0"
 
 [build-dependencies]
 icu_provider = { git = "https://github.com/unicode-org/icu4x.git" }

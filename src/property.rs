@@ -1,7 +1,7 @@
 // This file is licensed under the same terms as ICU4X.
 // For details, please see the LICENSE file.
 
-use crate::blob_provider;
+use crate::{blob_provider, ICU4XUniset};
 use icu_uniset::enum_props::{GeneralCategory, Script};
 use icu_uniset::props::*;
 use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
@@ -18,7 +18,7 @@ use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
 /// [UAX44](https://unicode.org/reports/tr44/#Matching_Symbolic):
 /// case, whitespace, dashes, and underscores are not ignored, and the
 /// Is prefix is not supported.
-pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<UnicodeSet> {
+pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<ICU4XUniset> {
     match prop_value {
         Some(value) => get_unicode_set_by_name_and_value(prop_name, value),
         None => get_unicode_set_by_name(prop_name),
@@ -26,7 +26,7 @@ pub fn get_unicode_set(prop_name: &str, prop_value: Option<&str>) -> Option<Unic
 }
 
 //  UnicodePropertyValueExpression :: UnicodePropertyName = UnicodePropertyValue
-fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Option<UnicodeSet> {
+fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Option<ICU4XUniset> {
     let provider = blob_provider::get_static_provider();
 
     // Steps 1-3
@@ -36,12 +36,12 @@ fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Optio
     let set = match prop {
         EnumeratedProperty::GeneralCategory => {
             let category = get_general_category(prop_value)?;
-            get_general_category_val_set(&provider, category)
+            get_general_category_val_set(provider, category)
         }
 
         EnumeratedProperty::Script => {
             let script = get_script(prop_value)?;
-            get_script_val_set(&provider, script)
+            get_script_val_set(provider, script)
         }
 
         EnumeratedProperty::ScriptExtension => {
@@ -51,18 +51,18 @@ fn get_unicode_set_by_name_and_value(prop_name: &str, prop_value: &str) -> Optio
     .expect("Static data should be available for all properties");
 
     // Step 6
-    Some(set)
+    Some(ICU4XUniset(set))
 }
 
 // UnicodePropertyValueExpression :: LoneUnicodePropertyNameOrValue
-fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
+fn get_unicode_set_by_name(prop_name: &str) -> Option<ICU4XUniset> {
     let provider = blob_provider::get_static_provider();
 
     // Steps 1-2.
     if let Some(general_category) = get_general_category(prop_name) {
-        let set = get_general_category_val_set(&provider, general_category)
+        let set = get_general_category_val_set(provider, general_category)
             .expect("Static data should be available for all properties");
-        return Some(set);
+        return Some(ICU4XUniset(set));
     }
 
     // Step 3.
@@ -71,75 +71,75 @@ fn get_unicode_set_by_name(prop_name: &str) -> Option<UnicodeSet> {
     // Steps 4-5.
     use BinaryProperty as BP;
     let set = match prop {
-        BP::Alphabetic => get_alphabetic_property(&provider),
-        BP::AsciiHexDigit => get_ascii_hex_digit_property(&provider),
-        BP::BidiControl => get_bidi_control_property(&provider),
-        BP::BidiMirrored => get_bidi_mirrored_property(&provider),
-        BP::CaseIgnorable => get_case_ignorable_property(&provider),
-        BP::Cased => get_cased_property(&provider),
-        BP::ChangesWhenCasefolded => get_changes_when_casefolded_property(&provider),
-        BP::ChangesWhenCasemapped => get_changes_when_casemapped_property(&provider),
-        BP::ChangesWhenLowercased => get_changes_when_lowercased_property(&provider),
-        BP::ChangesWhenNfkcCasefolded => get_changes_when_nfkc_casefolded_property(&provider),
-        BP::ChangesWhenTitlecased => get_changes_when_titlecased_property(&provider),
-        BP::ChangesWhenUppercased => get_changes_when_uppercased_property(&provider),
-        BP::Dash => get_dash_property(&provider),
-        BP::DefaultIgnorableCodePoint => get_default_ignorable_code_point_property(&provider),
-        BP::Deprecated => get_deprecated_property(&provider),
-        BP::Diacritic => get_diacritic_property(&provider),
-        BP::Emoji => get_emoji_property(&provider),
-        BP::EmojiComponent => get_emoji_component_property(&provider),
-        BP::EmojiModifierBase => get_emoji_modifier_base_property(&provider),
-        BP::EmojiModifier => get_emoji_modifier_property(&provider),
-        BP::EmojiPresentation => get_emoji_presentation_property(&provider),
-        BP::ExtendedPictographic => get_extended_pictographic_property(&provider),
-        BP::Extender => get_extender_property(&provider),
-        BP::GraphemeBase => get_grapheme_base_property(&provider),
-        BP::GraphemeExtend => get_grapheme_extend_property(&provider),
-        BP::HexDigit => get_hex_digit_property(&provider),
-        BP::IdContinue => get_id_continue_property(&provider),
-        BP::IdStart => get_id_start_property(&provider),
-        BP::Ideographic => get_ideographic_property(&provider),
-        BP::IdsBinaryOperator => get_ids_binary_operator_property(&provider),
-        BP::IdsTrinaryOperator => get_ids_trinary_operator_property(&provider),
-        BP::JoinControl => get_join_control_property(&provider),
-        BP::LogicalOrderException => get_logical_order_exception_property(&provider),
-        BP::Lowercase => get_lowercase_property(&provider),
-        BP::Math => get_math_property(&provider),
-        BP::NoncharacterCodePoint => get_noncharacter_code_point_property(&provider),
-        BP::PatternSyntax => get_pattern_syntax_property(&provider),
-        BP::PatternWhiteSpace => get_pattern_white_space_property(&provider),
-        BP::QuotationMark => get_quotation_mark_property(&provider),
-        BP::Radical => get_radical_property(&provider),
-        BP::RegionalIndicator => get_regional_indicator_property(&provider),
-        BP::SoftDotted => get_soft_dotted_property(&provider),
-        BP::SentenceTerminal => get_sentence_terminal_property(&provider),
-        BP::TerminalPunctuation => get_terminal_punctuation_property(&provider),
-        BP::UnifiedIdeograph => get_unified_ideograph_property(&provider),
-        BP::Uppercase => get_uppercase_property(&provider),
-        BP::VariationSelector => get_variation_selector_property(&provider),
-        BP::WhiteSpace => get_white_space_property(&provider),
-        BP::XidContinue => get_xid_continue_property(&provider),
-        BP::XidStart => get_xid_start_property(&provider),
+        BP::Alphabetic => get_alphabetic_property(provider),
+        BP::AsciiHexDigit => get_ascii_hex_digit_property(provider),
+        BP::BidiControl => get_bidi_control_property(provider),
+        BP::BidiMirrored => get_bidi_mirrored_property(provider),
+        BP::CaseIgnorable => get_case_ignorable_property(provider),
+        BP::Cased => get_cased_property(provider),
+        BP::ChangesWhenCasefolded => get_changes_when_casefolded_property(provider),
+        BP::ChangesWhenCasemapped => get_changes_when_casemapped_property(provider),
+        BP::ChangesWhenLowercased => get_changes_when_lowercased_property(provider),
+        BP::ChangesWhenNfkcCasefolded => get_changes_when_nfkc_casefolded_property(provider),
+        BP::ChangesWhenTitlecased => get_changes_when_titlecased_property(provider),
+        BP::ChangesWhenUppercased => get_changes_when_uppercased_property(provider),
+        BP::Dash => get_dash_property(provider),
+        BP::DefaultIgnorableCodePoint => get_default_ignorable_code_point_property(provider),
+        BP::Deprecated => get_deprecated_property(provider),
+        BP::Diacritic => get_diacritic_property(provider),
+        BP::Emoji => get_emoji_property(provider),
+        BP::EmojiComponent => get_emoji_component_property(provider),
+        BP::EmojiModifierBase => get_emoji_modifier_base_property(provider),
+        BP::EmojiModifier => get_emoji_modifier_property(provider),
+        BP::EmojiPresentation => get_emoji_presentation_property(provider),
+        BP::ExtendedPictographic => get_extended_pictographic_property(provider),
+        BP::Extender => get_extender_property(provider),
+        BP::GraphemeBase => get_grapheme_base_property(provider),
+        BP::GraphemeExtend => get_grapheme_extend_property(provider),
+        BP::HexDigit => get_hex_digit_property(provider),
+        BP::IdContinue => get_id_continue_property(provider),
+        BP::IdStart => get_id_start_property(provider),
+        BP::Ideographic => get_ideographic_property(provider),
+        BP::IdsBinaryOperator => get_ids_binary_operator_property(provider),
+        BP::IdsTrinaryOperator => get_ids_trinary_operator_property(provider),
+        BP::JoinControl => get_join_control_property(provider),
+        BP::LogicalOrderException => get_logical_order_exception_property(provider),
+        BP::Lowercase => get_lowercase_property(provider),
+        BP::Math => get_math_property(provider),
+        BP::NoncharacterCodePoint => get_noncharacter_code_point_property(provider),
+        BP::PatternSyntax => get_pattern_syntax_property(provider),
+        BP::PatternWhiteSpace => get_pattern_white_space_property(provider),
+        BP::QuotationMark => get_quotation_mark_property(provider),
+        BP::Radical => get_radical_property(provider),
+        BP::RegionalIndicator => get_regional_indicator_property(provider),
+        BP::SoftDotted => get_soft_dotted_property(provider),
+        BP::SentenceTerminal => get_sentence_terminal_property(provider),
+        BP::TerminalPunctuation => get_terminal_punctuation_property(provider),
+        BP::UnifiedIdeograph => get_unified_ideograph_property(provider),
+        BP::Uppercase => get_uppercase_property(provider),
+        BP::VariationSelector => get_variation_selector_property(provider),
+        BP::WhiteSpace => get_white_space_property(provider),
+        BP::XidContinue => get_xid_continue_property(provider),
+        BP::XidStart => get_xid_start_property(provider),
 
         BP::Ascii => {
             let mut builder = UnicodeSetBuilder::new();
             builder.add_range(&('\u{0}'..='\u{7f}'));
-            Ok(builder.build())
+            return Some(builder.build().into());
         }
-        BP::Any => Ok(UnicodeSet::all()),
+        BP::Any => return Some(UnicodeSet::all().into()),
         BP::Assigned => {
             let mut builder = UnicodeSetBuilder::new();
-            let unassigned = get_general_category_val_set(&provider, GeneralCategory::Unassigned)
+            let unassigned = get_general_category_val_set(provider, GeneralCategory::Unassigned)
                 .expect("Static data should include Gc=Unassigned");
-            builder.add_set(&unassigned);
+            builder.add_set(&ICU4XUniset(unassigned).get());
             builder.complement();
-            Ok(builder.build())
+            return Some(builder.build().into());
         }
     }
     .expect("Static data should be available for all properties");
 
-    Some(set)
+    Some(ICU4XUniset(set))
 }
 
 // Table 69: Non-binary Unicode property aliases and their canonical property names
@@ -499,41 +499,44 @@ fn get_script(script_name: &str) -> Option<Script> {
 
 #[test]
 fn test_basic() {
-    let whitespace1: UnicodeSet = get_unicode_set("space", None).unwrap();
-    let whitespace2: UnicodeSet = get_unicode_set("White_Space", None).unwrap();
+    let whitespace1 = get_unicode_set("space", None).unwrap();
+    let whitespace2 = get_unicode_set("White_Space", None).unwrap();
     assert_eq!(
-        whitespace1.get_inversion_list(),
-        whitespace2.get_inversion_list()
+        whitespace1.get().get_inversion_list(),
+        whitespace2.get().get_inversion_list()
     );
-    assert!(whitespace1.contains(' '));
+    assert!(whitespace1.get().contains(' '));
 }
 
 #[test]
 fn test_script() {
-    let cyrillic1: UnicodeSet = get_unicode_set("Script", Some("Cyrillic")).unwrap();
-    let cyrillic2: UnicodeSet = get_unicode_set("sc", Some("Cyrl")).unwrap();
+    let cyrillic1 = get_unicode_set("Script", Some("Cyrillic")).unwrap();
+    let cyrillic2 = get_unicode_set("sc", Some("Cyrl")).unwrap();
     assert_eq!(
-        cyrillic1.get_inversion_list(),
-        cyrillic2.get_inversion_list()
+        cyrillic1.get().get_inversion_list(),
+        cyrillic2.get().get_inversion_list()
     );
-    assert!(cyrillic1.contains('\u{0410}')); // U+0410 CYRILLIC CAPITAL LETTER A
+    assert!(cyrillic1.get().contains('\u{0410}')); // U+0410 CYRILLIC CAPITAL LETTER A
 }
 
 #[test]
 fn test_special() {
     let any = get_unicode_set("Any", None).unwrap();
-    assert_eq!(any.get_inversion_list(), vec![0, char::MAX as u32 + 1]);
+    assert_eq!(
+        any.get().get_inversion_list(),
+        vec![0, char::MAX as u32 + 1]
+    );
 
     let ascii = get_unicode_set("ASCII", None).unwrap();
-    assert_eq!(ascii.get_inversion_list(), vec![0, 0x80]);
+    assert_eq!(ascii.get().get_inversion_list(), vec![0, 0x80]);
 
     let assigned = get_unicode_set("Assigned", None).unwrap();
     let unassigned = get_unicode_set("General_Category", Some("Unassigned")).unwrap();
     let mut builder = UnicodeSetBuilder::new();
-    builder.add_set(&assigned);
-    builder.add_set(&unassigned);
+    builder.add_set(&assigned.get());
+    builder.add_set(&unassigned.get());
     assert_eq!(
         builder.build().get_inversion_list(),
-        any.get_inversion_list()
+        any.get().get_inversion_list()
     );
 }

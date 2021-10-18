@@ -5,9 +5,8 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::ptr;
 
-use icu_uniset::{UnicodeSet, UnicodeSetBuilder};
-
-pub type ICU4XUniset = UnicodeSet;
+use crate::ICU4XUniset;
+use icu_uniset::UnicodeSetBuilder;
 
 unsafe fn ptr_to_str<'a>(raw: *const c_char) -> Option<&'a str> {
     if raw.is_null() {
@@ -37,14 +36,14 @@ pub unsafe extern "C" fn icu4x_uniset_create_for_property(
 pub unsafe extern "C" fn icu4x_uniset_complemented(uniset: *mut ICU4XUniset) -> *mut ICU4XUniset {
     let set = Box::from_raw(uniset);
     let mut builder = UnicodeSetBuilder::new();
-    builder.add_set(&set);
+    builder.add_set(&set.get());
     builder.complement();
-    Box::into_raw(Box::new(builder.build()))
+    Box::into_raw(Box::new(builder.build().into()))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn icu4x_uniset_get_range_count(uniset: *const ICU4XUniset) -> usize {
-    (&*uniset).get_range_count()
+    (&*uniset).get().get_range_count()
 }
 
 #[no_mangle]
@@ -53,6 +52,7 @@ pub unsafe extern "C" fn icu4x_uniset_get_range_start(
     index: usize,
 ) -> u32 {
     (&*uniset)
+        .get()
         .get_nth_range(index)
         .map(|range| *range.start())
         .unwrap_or(0)
@@ -64,6 +64,7 @@ pub unsafe extern "C" fn icu4x_uniset_get_range_end(
     index: usize,
 ) -> u32 {
     (&*uniset)
+        .get()
         .get_nth_range(index)
         .map(|range| *range.end())
         .unwrap_or(0)
